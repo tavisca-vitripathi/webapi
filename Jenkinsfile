@@ -2,29 +2,23 @@ pipeline {
     agent any
 
     stages {
-        stage('Restore') {
+        stage('Docker build') {
             steps {
-                echo 'Restoring..'
-				bat 'dotnet restore webapi.sln'
+				bat 'docker build -t vitripathi/basic_image:build-%BUILD_NUMBER% .'
             }
         }
-        stage('Building') {
-            steps {
-                echo 'building..'
-				bat 'dotnet build webapi.sln -p:Configuration=release -v:q'
-            }
-        }
-        stage('Publish') {
-            steps {
-                echo 'Publish....'
-				bat 'dotnet publish webapi.sln'
-            }
-        }
-		 stage('Deploy') {
-            steps {
-                echo 'Deploying...'
-				bat 'dotnet webapi/bin/Release/netcoreapp2.1/webapi.dll'
-            }
-        }
+		
+		stage('Docker push'){
+			steps{
+				bat 'docker login -u vitripathi -p Fifa@kflt123'
+				bat 'docker push vitripathi/basic_image:build-%BUILD_NUMBER%'
+			}
+		}
+		
+		stage('Docker run'){
+			steps{
+				bat 'docker run --rm -p 13250:80 vitripathi/basic_image:build-%BUILD_NUMBER%'
+			}
+		}
     }
 }
